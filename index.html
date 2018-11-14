@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
 <head>
     <title></title>
@@ -46,28 +46,11 @@
   font-size: 10px;
 }
     </style>
-    <script type="text/javascript">
-        var loadScript = function (url, callback) {
-            var script = document.createElement("script");
-            script.type = "text/javascript";
 
-            if (script.readyState) {  //IE
-                script.onreadystatechange = function () {
-                    if (script.readyState == "loaded" || script.readyState == "complete") {
-                        script.onreadystatechange = null;
-                        callback();
-                    }
-                };
-            } else {  //Others
-                script.onload = function () {
-                    callback();
-                };
-            }
-            script.src = url;
-            document.getElementsByTagName("head")[0].appendChild(script);
-        };       
-    </script>
 
+</head>
+<body>
+ 
     
 
     <script type="text/javascript">
@@ -146,10 +129,6 @@ $("#msgInput").bind("keypress", function(e) {
 
 
     </script>
-
-</head>
-<body>
-  
 
 <input type="text" id="msgInput" class="materialize-textarea" placeholder="Enter your message">
 
