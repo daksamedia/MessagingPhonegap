@@ -4,5 +4,5 @@
   <description>
   </description>
   <access origin="*" />
-  <gap:plugin name="com.ququplay.websocket.websocket" />
+  <gap:plugin name="cordova-plugin-websocket" source="npm" />
 </widget>
