@@ -3,9 +3,49 @@
 <head>
     <title></title>
     <script src="cordova.js" type="text/javascript"></script>
-    <script src="scripts/jquery-1.6.4.js" type="text/javascript"></script>    
+   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>  
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>  
     <script type="text/javascript" src="http://messaging-public.realtime.co/js/2.1.0/ortc.js"></script>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css"></link>
+    <style>
+        body {
+  width: 400px;
+  margin:0 auto;
+  background-color: white;
+}
 
+#msgInput {
+  margin-top: 30px;  
+}
+
+#log {
+  margin-top: 50px;
+  max-height: 200px;
+  overflow: auto;
+  scrollbar: none;
+  text-align: left;
+  padding: 20px;
+  border: solid 1px gray;
+}
+
+.blockquote-left {
+  margin: 5px 0;
+  padding-left: 1.5rem;
+  border-left: 5px solid #ee6e73;
+  text-align: left;
+}
+
+.blockquote-right {
+  padding-right: 1.5rem;
+  border-right: 5px solid #2bbbad;
+  text-align: right;
+  margin-bottom: 5px;
+}
+
+.time {
+  font-size: 10px;
+}
+    </style>
     <script type="text/javascript">
         var loadScript = function (url, callback) {
             var script = document.createElement("script");
@@ -31,89 +71,95 @@
     
 
     <script type="text/javascript">
-        var ortcClient = null,
-            url = 'http://ortc-developers.realtime.co/server/2.1/',
-            applicationKey = 'np7sbH',
-            authenticationToken = '3afxcv4ymzzsfmovdon22kmh',
-            channel = 'cs';
+       // The Realtime client connection
+var ortcClient;
 
-        // Log function
-        var Log = function (text) {
-            document.getElementById('taLog').value += "\n" + text;
-        }
+// The Realtime channel
+var chatChannel = "cs";
 
-        // Sends a message
-        function send() {
-            var message = document.getElementById('txtMessage').value;
-            Log("Message sent to channel: " + channel + ": " + message);
-            ortcClient.send(channel, message);
-        };
+// The current user id (random between 1 and 1000)
+var myId = "ID_" + Math.floor((Math.random() * 1000) + 1);
 
-        // Displays a message received
-        var onMessage = function (client, channel, message) {
-            Log('Message received from channel ' + channel + ': ' + message);
-        };
+// We start here ...
+$(function() {
+  connectToRealtime();
+});
 
-        // Creates the client and the connection
-        var createClient = function () {
-            loadOrtcFactory(IbtRealTimeSJType, function (factory, error) {
-                // Checks if we have successfuly created the factory
-                if (error != null) {
-                    console.error(error);
-                }
-                else {
-                    // Creates the factory
-                    ortcClient = factory.createClient();                    
-                    ortcClient.setClusterUrl(url);
+// Connect to the Realtime cluster
+function connectToRealtime() {
+  ortcClient = RealtimeMessaging.createClient();
+  ortcClient.setClusterUrl('http://ortc-developers.realtime.co/server/2.1');
 
-                    // Callback for when we're connected
-                    ortcClient.onConnected = function (ortc) {
-                        Log("Connected to Realtime server " + ortcClient.getUrl());
-                        Log("Transport used: " + ortcClient.getProtocol());
-                        ortcClient.subscribe(channel, true, onMessage);
-                    };
+  Log("Connecting to Realtime ...");
+  ortcClient.connect('np7sbH', 'anonymousToken');
 
-                    // Callback for when we're subscribed to a channel
-                    ortcClient.onSubscribed = function (ortc, channel) {
-                        Log("Subscribed channel " + channel);
-                    };
+  // we need to wait for the connection to complete
+  // before we subscribe the channel
+  ortcClient.onConnected = function(ortc) {
+    $("#log").html("Connected");
 
-                    // Callback for when we get an exception
-                    ortcClient.onException = function (ortc, exception) {
-                        Log('Exception: ' + exception);
-                    };
+    // subscribe the chat channel
+    // the onChatMessage callback function will handle new messages
+    ortcClient.subscribe(chatChannel, true, onChatMessage);
+  }
+}
 
-                    // Connects to the ORTC server
-                    Log("Connecting...");
-                    ortcClient.connect(applicationKey, authenticationToken);
-                }
-            });
-        };
+// Handle a received chat message
+function onChatMessage(ortc, channel, message) {
+	var receivedMessage = JSON.parse(message);
+  var msgAlign = (receivedMessage.id == myId ? "right" : "left");
+  
+  // format message to show on log
+	var msgLog = "<div class='blockquote-" + msgAlign + "'>"
+  msgLog += receivedMessage.text + "<br>";
+	msgLog += "<span class='time'>" + receivedMessage.sentAt + "</span></div>"
+  
+  // add the message to the chat log
+  Log(msgLog);
+}
 
-        $(function () {
-            document.addEventListener("deviceready", function () {
-                 var isAndroid = (navigator.userAgent.match(/Android/i)) == "Android" ? true : false;
+// Send a new chat message
+function sendMessage() {
+	var message = {
+  	id: myId,
+  	text: $("#msgInput").val(),
+    sentAt: new Date().toLocaleTimeString()
+  };
+  
+  ortcClient.send(chatChannel, JSON.stringify(message));
+  
+  // clear the input field
+  $('#msgInput').val("");
+}
 
-                if(isAndroid){
-                    loadScript("scripts/phonegap-websocket.js",function(){
-                        createClient();
-                    });
-                }else{
-                    createClient();
-                }
-            });
-        });
+// Adds text to the chat log
+function Log(text) {
+	$("#log").html(text + $("#log").html());
+}
+
+// Bind keypress to send message on enter key press
+$("#msgInput").bind("keypress", function(e) {
+  if(e.keyCode == 13) {
+    sendMessage();
+  }
+});
+
 
     </script>
 
 </head>
 <body>
-    <div id="dMessage">
-        <input type="text" id="txtMessage" style="width: 100%" />
-        <input type="button" id="btnSendMessage" value="Send Message" onclick="send();" />
-    </div>
-    <div>
-        <textarea id="taLog" rows="2" cols="20" readonly="readonly" style="height: 300px; width: 100%"></textarea>
-    </div>
+  
+
+<input type="text" id="msgInput" class="materialize-textarea" placeholder="Enter your message">
+
+<button class="btn waves-effect waves-light" type="submit" name="action" onclick="sendMessage()">
+  Send Message
+</button>
+
+ <div id="log"></div>
+ 
+
+    
 </body>
 </html>
