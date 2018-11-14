@@ -4,7 +4,7 @@
   <description>
   </description>
   <access origin="*" />
-  <preference name="phonegap-version" value="3.3.0" />
+  
   <gap:plugin name="org.apache.cordova.file" />
   <gap:plugin name="com.ququplay.websocket.websocket" />
 </widget>
